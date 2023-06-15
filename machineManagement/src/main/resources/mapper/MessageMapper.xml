@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.machineManagement.mapper.MessageMapper">
+
+    <resultMap type="com.design.machineManagement.pojo.Message" id="MessageMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="message" column="message" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="createdBy" column="created_by" jdbcType="VARCHAR"/>
+        <result property="showIn" column="show_in" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="MessageMap">
+        select
+          id, message, created_at, created_by, show_in
+        from message
+        where id = #{id}
+    </select>
+
+    
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into message(message, created_at, created_by, show_in)
+        values (#{message}, now(), #{createdBy}, 0)
+    </insert>
+
+   
+    <!--通过主键修改数据-->
+    <update id="update">
+        update message
+        <set>
+            <if test="message != null and message != ''">
+                message = #{message},
+            </if>
+            <if test="createdAt != null">
+                created_at = #{createdAt},
+            </if>
+            <if test="createdBy != null and createdBy != ''">
+                created_by = #{createdBy},
+            </if>
+            <if test="showIn != null">
+                show_in = #{showIn},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from message where id = #{id}
+    </delete>
+    <select id="getPageListCount" resultType="int">
+        select count(id) as count from message
+    </select>
+
+    <select id="getPageListByCondition" resultMap="MessageMap">
+        select * from message
+        order by
+        created_at desc
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <select id="getMessage" resultMap="MessageMap">
+        select * from message where show_in =1 order by id  limit 0,2
+    </select>
+</mapper>

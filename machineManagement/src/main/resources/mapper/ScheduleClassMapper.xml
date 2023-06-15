@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.machineManagement.mapper.ScheduleClassMapper">
+
+    <resultMap type="com.design.machineManagement.pojo.ScheduleClass" id="ScheduleClassMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="courseId" column="course_id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="courseName" column="course_name" jdbcType="VARCHAR"/>
+        <result property="createdBy" column="created_by" jdbcType="VARCHAR"/>
+        <result property="weekDay" column="week_day" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="startTime" column="start_time" jdbcType="VARCHAR"/>
+        <result property="roomNo" column="room_no" jdbcType="VARCHAR"/>
+        <result property="endTime" column="end_time" jdbcType="VARCHAR"/>
+        <result property="machineId" column="machine_id" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="ScheduleClassMap">
+        select
+         *
+        from schedule_class
+        where id = #{id}
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into schedule_class(course_id, user_id, start_time, end_time, machine_id,created_by,created_at,week_day)
+        values (#{courseId}, #{userId}, #{startTime}, #{endTime}, #{machineId},#{createdBy},now(),#{weekDay})
+    </insert>
+
+
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update schedule_class
+        <set>
+            <if test="courseId != null">
+                course_id = #{courseId},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="startTime != null">
+                start_time = #{startTime},
+            </if>
+            <if test="endTime != null">
+                end_time = #{endTime},
+            </if>
+            <if test="machineId != null">
+                machine_id = #{machineId},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from schedule_class where id = #{id}
+    </delete>
+    <select id="getPageListByCondition" resultMap="ScheduleClassMap">
+        select a.*,b.course_name,c.user_name,d.room_no  from schedule_class a
+        left join course b on  a.course_id =b.id
+        left join users c on a.user_id =c.id
+        left join machine d on  a.machine_id =d.id where a.created_at is not null
+        <if test="page.key.userId != null">
+            and a.user_id = #{page.key.userId}
+        </if>
+        <if test="page.key.machineId != null">
+            and a.machine_id = #{page.key.machineId}
+        </if>
+        <if test="page.key.weekDay != null and page.key.weekDay != ''">
+            and  a.week_day = #{page.key.weekDay}
+        </if>
+        order by
+        a.week_day
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <select id="getPageListCount" resultType="int">
+        select count(a.id) as count  from schedule_class a
+        left join course b on  a.course_id =b.id
+        left join users c on a.user_id =c.id
+        where a.created_at is not null
+        <if test="page.key.userId != null">
+            and a.user_id = #{page.key.userId}
+        </if>
+        <if test="page.key.machineId != null">
+            and a.machine_id = #{page.key.machineId}
+        </if>
+        <if test="page.key.weekDay != null and page.key.weekDay != ''">
+            and  a.week_day = #{page.key.weekDay}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.machineManagement.mapper.BorrowMapper">
+
+    <resultMap type="com.design.machineManagement.pojo.Borrow" id="BorrowMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="machineId" column="machine_id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="borrowTime" column="borrow_time" jdbcType="TIMESTAMP"/>
+        <result property="checked" column="checked" jdbcType="INTEGER"/>
+        <result property="checkMan" column="check_man" jdbcType="VARCHAR"/>
+        <result property="classTime" column="class_time" jdbcType="TIMESTAMP"/>
+        <result property="startTime" column="start_time" jdbcType="VARCHAR"/>
+        <result property="endTime" column="end_time" jdbcType="VARCHAR"/>
+        <result property="reason" column="reason" jdbcType="VARCHAR"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="roomNo" column="room_no" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="BorrowMap">
+        select
+          *
+        from borrow
+        where id = #{id}
+    </select>
+
+
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into borrow(machine_id, user_id, borrow_time, checked, check_man, class_time, start_time, end_time, reason)
+        values (#{machineId}, #{userId}, now(), #{checked}, #{checkMan}, #{classTime}, #{startTime}, #{endTime}, #{reason})
+    </insert>
+
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update borrow
+        <set>
+            <if test="machineId != null">
+                machine_id = #{machineId},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="borrowTime != null">
+                borrow_time = #{borrowTime},
+            </if>
+            <if test="checked != null">
+                checked = #{checked},
+            </if>
+            <if test="checkMan != null and checkMan != ''">
+                check_man = #{checkMan},
+            </if>
+
+            <if test="startTime != null and startTime != ''">
+                start_time = #{startTime},
+            </if>
+            <if test="endTime != null and endTime != ''">
+                end_time = #{endTime},
+            </if>
+            <if test="reason != null and reason != ''">
+                reason = #{reason},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from borrow where id = #{id}
+    </delete>
+    <select id="getPageListByCondition" resultMap="BorrowMap">
+        select b.user_name,c.room_no,a.* from borrow a
+        left join users  b on a.user_id=b.id
+        left join machine c on a.machine_id=c.id
+        where a.borrow_time is not null
+        <if test="page.key.checked == null ">
+            and  a.checked  is null
+        </if>
+        <if test="page.key.checked != null ">
+          and  a.checked = #{page.key.checked}
+        </if>
+        <if test="page.key.userId != null ">
+            and   a.user_id = #{page.key.userId}
+        </if>
+        <if test="page.key.machineId != null ">
+            and  a.machine_id = #{page.key.machineId}
+        </if>
+        order by
+        id desc
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <select id="getPageListCount" resultType="int">
+        select count(a.id) as count  from borrow a
+        left join users  b on a.user_id=b.id
+        left join machine c on a.machine_id=c.id
+        where a.borrow_time is not null
+        <if test="page.key.checked == null ">
+            and  a.checked  is null
+        </if>
+        <if test="page.key.checked != null ">
+            and  a.checked = #{page.key.checked}
+        </if>
+        <if test="page.key.userId != null ">
+            and   a.user_id = #{page.key.userId}
+        </if>
+        <if test="page.key.machineId != null ">
+            and  a.machine_id = #{page.key.machineId}
+        </if>
+    </select>
+    <!--同个时间段同个机房申请审核通过了 就不让它在点申请了-->
+    <select id="getByTime" resultMap="BorrowMap">
+        select * from borrow where class_time=#{classTime} and start_time=#{startTime} and end_time=#{endTime} and machine_id=#{machineId} and checked =true
+    </select>
+    <!--不让用户重复提交同个时间段同个机房的申请-->
+    <select id="getByUserId" resultMap="BorrowMap">
+        select * from borrow where class_time=#{classTime} and start_time=#{startTime} and end_time=#{endTime} and machine_id=#{machineId} and user_id=#{userId}
+    </select>
+
+</mapper>

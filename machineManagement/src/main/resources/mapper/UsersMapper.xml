@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.machineManagement.mapper.UsersMapper">
+
+    <resultMap type="com.design.machineManagement.pojo.Users" id="UsersMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="teachNo" column="teach_no" jdbcType="INTEGER"/>
+        <result property="role" column="role" jdbcType="VARCHAR"/>
+        <result property="sex" column="sex" jdbcType="VARCHAR"/>
+        <result property="rank" column="rank" jdbcType="VARCHAR"/>
+        <result property="department" column="department" jdbcType="VARCHAR"/>
+        <result property="updatedBy" column="updated_by" jdbcType="VARCHAR"/>
+        <result property="createdBy" column="created_by" jdbcType="VARCHAR"/>
+        <result property="age" column="age" jdbcType="INTEGER"/>
+        <result property="image" column="image" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="getByTeachNo" resultMap="UsersMap">
+        select
+         *
+        from users
+        where teach_no = #{teachNo}
+    </select>
+
+    <!--查询单个-->
+    <select id="getById" resultMap="UsersMap">
+        select
+         *
+        from users
+        where id = #{id}
+    </select>
+    <!--将教师的数据查出来-->
+    <select id="getTeachList" resultMap="UsersMap">
+        select
+         id,
+         user_name
+        from users
+        where role='user'
+    </select>
+    <select id="getAdminList" resultMap="UsersMap">
+        select
+         id,
+         user_name
+        from users
+        where role='admin'
+    </select>
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into users(user_name, password, created_at, teach_no, role, sex, rank, department, age, image,created_by)
+        values (#{userName}, #{password}, now(), #{teachNo}, #{role}, #{sex}, #{rank}, #{department}, #{age}, #{image},#{createdBy})
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update users
+        <set>
+            <if test="updatedBy != null and updatedBy != ''">
+                updated_by = #{updatedBy},
+            </if>
+            <if test="userName != null and userName != ''">
+                user_name = #{userName},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <if test="createdAt != null">
+                created_at = #{createdAt},
+            </if>
+            <if test="teachNo != null">
+                teach_no = #{teachNo},
+            </if>
+            <if test="role != null and role != ''">
+                role = #{role},
+            </if>
+            <if test="sex != null and sex != ''">
+                sex = #{sex},
+            </if>
+            <if test="rank != null and rank != ''">
+                rank = #{rank},
+            </if>
+            <if test="department != null and department != ''">
+                department = #{department},
+            </if>
+            <if test="age != null">
+                age = #{age},
+            </if>
+            <if test="image != null and image != ''">
+                image = #{image},
+            </if>
+            updated_at =now()
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from users where id = #{id}
+    </delete>
+    <!--根据教师编号查询用户数据-->
+  <select id="getByTeachNoAndRole"  resultMap="UsersMap">
+      select * from users where teach_no=#{teachNo} and role=#{role}
+  </select>
+    <select id="getPageListByCondition" resultMap="UsersMap">
+        select * from users where  created_at is not null
+            <if test="page.key.userName != null and page.key.userName != ''">
+                and  user_name like '%' #{page.key.userName}  '%'
+            </if>
+            <if test="page.key.teachNo != null and page.key.teachNo != ''">
+                and teach_no = #{page.key.teachNo}
+            </if>
+        <if test="page.key.role != null and page.key.role != ''">
+                 and role = #{page.key.role}
+        </if>
+        order by
+        created_at desc
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <select id="getPageListCount" resultType="int">
+        select count(id) as count from users  where  created_at is not null
+
+            <if test="page.key.userName != null and page.key.userName != ''">
+               and  user_name like '%' #{page.key.userName}  '%'
+            </if>
+            <if test="page.key.teachNo != null and page.key.teachNo != ''">
+                and teach_no = #{page.key.teachNo}
+            </if>
+        <if test="page.key.role != null and page.key.role != ''">
+            and role = #{page.key.role}
+        </if>
+    </select>
+</mapper>

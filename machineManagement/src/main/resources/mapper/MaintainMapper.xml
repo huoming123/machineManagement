@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.machineManagement.mapper.MaintainMapper">
+
+    <resultMap type="com.design.machineManagement.pojo.Maintain" id="MaintainMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="orderId" column="order_id" jdbcType="VARCHAR"/>
+        <result property="problem" column="problem" jdbcType="VARCHAR"/>
+        <result property="computerNo" column="computer_no" jdbcType="VARCHAR"/>
+        <result property="roomNo" column="room_no" jdbcType="VARCHAR"/>
+        <result property="maintainTime" column="maintain_time" jdbcType="TIMESTAMP"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"/>
+        <result property="userPhone" column="user_phone" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="INTEGER"/>
+        <result property="worker" column="worker" jdbcType="VARCHAR"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="year" column="year" jdbcType="INTEGER"/>
+        <result property="count" column="count" jdbcType="INTEGER"/>
+        <result property="maintainPhone" column="maintain_phone" jdbcType="VARCHAR"/>
+    </resultMap>
+    <!--根据机房跟电脑编号查询未处理的申请记录-->
+    <select id="queryByRoomNoAndcomputerNo" resultMap="MaintainMap">
+        select
+           *
+        from maintain
+        where room_no = #{roomNo} and computer_no =#{computerNo} and  status is null
+    </select>
+
+    <!--查询单个-->
+    <select id="getByOrderId" resultMap="MaintainMap">
+        select
+           *
+        from maintain
+        where order_id = #{orderId}
+    </select>
+
+    <select id="getPageListByCondition" resultMap="MaintainMap">
+        select * from maintain  where  created_at is not null
+        <if test="page.key.orderId != null and page.key.orderId != ''">
+              and order_id = #{page.key.orderId}
+        </if>
+        <if test="page.key.roomNo != null and page.key.roomNo != ''">
+            and room_no = #{page.key.roomNo}
+        </if>
+        <if test="page.key.role == 'user'">
+            and user_id = #{page.key.userId}
+        </if>
+        <if test="page.key.status == null">
+            and `status`  is null
+        </if>
+        <if test="page.key.status != null">
+            and `status`  = #{page.key.status}
+        </if>
+        order by
+        id desc <!--降序-->
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <select id="getPageListCount" resultType="int">
+        select count(id) as count from maintain where  maintain_time is not null
+        <if test="page.key.orderId != null and page.key.orderId != ''">
+            and order_id = #{page.key.orderId}
+        </if>
+        <if test="page.key.roomNo != null and page.key.roomNo != ''">
+            and room_no = #{page.key.roomNo}
+        </if>
+        <if test="page.key.role == 'user'">
+            and user_id = #{page.key.userId}
+        </if>
+        <if test="page.key.status == null">
+            and status is null
+        </if>
+        <if test="page.key.status != null">
+            and status = #{page.key.status}
+        </if>
+    </select>
+    <select id="getPageCountListByCondition" resultMap="MaintainMap">
+        select  date_format(a.created_at, '%Y') as year,
+        a.status,a.room_no,a.computer_no,a.user_name,
+        count(a.id) as count from maintain a
+        where  a.created_at is not null
+        <if test="page.key.userName != null and page.key.userName != ''">
+            and a.user_name like '%' #{page.key.userName} '%'
+        </if>
+        <if test="page.key.year != null ">
+            <bind name="pattern" value="'%' + page.key.year + '%'" />
+            and a.created_at like #{pattern}
+        </if>
+        <if test="page.key.status != null and  page.key.status != 2 ">
+            and a.status =#{page.key.status}
+        </if>
+        <if test="page.key.status != null and  page.key.status == 2">
+            and a.status is null
+        </if>
+        <if test="page.key.roomNo != null and page.key.roomNo != '' ">
+            and a.room_no =#{page.key.roomNo}
+        </if>
+        <if test="page.key.computerNo != null and page.key.computerNo != '' ">
+            and a.computer_no like '%' #{page.key.computerNo} '%'
+        </if>
+        GROUP BY year desc,a.status,a.room_no,a.computer_no,a.user_name
+    </select>
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into maintain(order_id, problem, computer_no, room_no, maintain_time, user_name, user_phone, status,worker, maintain_phone,created_at,user_id)
+        values (#{orderId}, #{problem}, #{computerNo}, #{roomNo}, #{maintainTime}, #{userName}, #{userPhone}, #{status},#{worker}, #{maintainPhone},now(),#{userId})
+    </insert>
+
+   
+    <!--通过主键修改数据-->
+    <update id="update">
+        update maintain
+        <set>
+            <if test="orderId != null and orderId != ''">
+                order_id = #{orderId},
+            </if>
+            <if test="problem != null and problem != ''">
+                problem = #{problem},
+            </if>
+            <if test="computerNo != null and computerNo != ''">
+                computer_no = #{computerNo},
+            </if>
+            <if test="roomNo != null and roomNo != ''">
+                room_no = #{roomNo},
+            </if>
+            <if test="maintainTime != null">
+                maintain_time = #{maintainTime},
+            </if>
+            <if test="userName != null and userName != ''">
+                user_name = #{userName},
+            </if>
+            <if test="userPhone != null and userPhone != ''">
+                user_phone = #{userPhone},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="worker != null and worker != ''">
+                worker = #{worker},
+            </if>
+            <if test="maintainPhone != null and maintainPhone != ''">
+                maintain_phone = #{maintainPhone},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from maintain where id = #{id}
+    </delete>
+
+</mapper>

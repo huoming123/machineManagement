@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.design.machineManagement.mapper.MachineMapper">
+
+    <resultMap type="com.design.machineManagement.pojo.Machine" id="MachineMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="roomNo" column="room_no" jdbcType="VARCHAR"/>
+        <result property="num" column="num" jdbcType="INTEGER"/>
+        <result property="describ" column="describ" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedBy" column="updated_by" jdbcType="VARCHAR"/>
+        <result property="createdBy" column="created_by" jdbcType="VARCHAR"/>
+        <result property="image" column="image" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="MachineMap">
+        select
+         *
+        from machine
+        where id = #{id}
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into machine(room_no, num, describ, image,created_at,created_by)
+        values (#{roomNo}, #{num}, #{describ}, #{image},now(),#{createdBy})
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update machine
+        <set>
+            <if test="roomNo != null and roomNo != ''">
+                room_no = #{roomNo},
+            </if>
+            <if test="num != null">
+                num = #{num},
+            </if>
+            <if test="describ != null and describ != ''">
+                describ = #{describ},
+            </if>
+            <if test="image != null and image != ''">
+                image = #{image},
+            </if>
+            <if test="image != null and image != ''">
+                image = #{image},
+            </if>
+            <if test="updatedBy != null and updatedBy != ''">
+                updated_by = #{updatedBy},
+            </if>
+             updated_at =now()
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from machine where id = #{id}
+    </delete>
+    <select id="getPageListByCondition" resultMap="MachineMap">
+        select * from machine
+        <if test="page.key.roomNo != null and page.key.roomNo!=''">
+            where room_no = #{page.key.roomNo}
+        </if>
+        order by
+        room_no
+        <!--分页查询-->
+        <!--比如 pageNum=1 pageSize=10为 第一页开始 查10条数据 ((#{page.pageNum}-1)*#{page.pageSize})=0*10,10 则表示从1开始查10条数据-->
+        limit  #{page.startNum} , #{page.pageSize}
+    </select>
+    <select id="getPageListCount" resultType="int">
+        select count(id) as count from machine
+        <if test="page.key.roomNo != null and page.key.roomNo!='' ">
+            where room_no = #{page.key.roomNo}
+        </if>
+    </select>
+    <!--根据机房号查找数据-->
+    <select id="getByRoomNo" resultMap="MachineMap">
+        select
+         *
+        from machine
+        where room_no = #{roomNo}
+    </select>
+    <!--把所有机房的数据查出来-->
+    <select id="getAllList" resultMap="MachineMap">
+        select
+         *
+        from machine
+    </select>
+</mapper>
